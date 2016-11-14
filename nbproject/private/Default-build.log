@@ -1,0 +1,7 @@
+./bas2tap/bas2tap -q -a10 -sFileDown ./cargadorBASIC/cargador.bas
+zcc +zx -o f.bin -lndos src/ftpuno.c > ultimolog.txt
+sccz80:"src/ftpuno.c" L:83 Error:#42:Unknown symbol: Serial
+sccz80:"src/ftpuno.c" L:83 Error:#36:Can't take member
+Compilation aborted
+Makefile:33: recipe for target 'compilar' failed
+make: *** [compilar] Error 1
