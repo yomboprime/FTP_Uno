@@ -23,7 +23,7 @@
 
 #include "../textUtils.h"
 
-// Change this for debugging
+// Change this from 0 to 1 for debugging
 #define DEBUG_FTP 0
 
 #if DEBUG_FTP==1
@@ -113,6 +113,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
 
     uint8_t parseState;
     uint8_t fileOrDirectory;
+    bool beganWithSpaces;
     bool parsingFileSize;
     uint32_t fileSize;
     uint8_t numCharsFileName;
@@ -142,6 +143,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
     }
 
     // Start data connection
+    EspDrv_stopClient( FTP_dataSocket );
     if ( EspDrv_startClient( FTP_host, dataServerPort, FTP_dataSocket, TCP_MODE ) == true ) {
 
         DEBUGFTP_println("Connected to server data socket.");
@@ -181,6 +183,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
     connClosedData = false;
     bytesRead = 0;
     parseState = 0;
+    beganWithSpaces = true;
     parsingFileSize = false;
     *numEntries = 0;
     *numTotalEntries = 0;
@@ -206,6 +209,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
                             *buffer++ = fileOrDirectory;
                         }
                         parseState = 1;
+                        beganWithSpaces = true;
                         break;
 
                     case 1:
@@ -215,9 +219,17 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
                     case 6:
                     case 7:
                     case 8:
-                        // Skip non space characters, and the following space separator
-                        if ( c == ' ' ) {
-                            parseState++;
+                        // Skip begginin spaces, following non space characters, and one space separator
+                        if ( beganWithSpaces == true ) {
+                            if ( c != ' ' ) {
+                                beganWithSpaces = false;
+                            }
+                        }
+                        else {
+                            if ( c == ' ' ) {
+                                parseState++;
+                                beganWithSpaces = true;
+                            }
                         }
                         break;
 
@@ -238,6 +250,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
                                 extension1 = ' ';
                                 extension2 = ' ';
                                 parsingFileSize = false;
+                                beganWithSpaces = true;
                                 parseState = 6;
                             }
                             else {
@@ -266,7 +279,7 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
                                 *buffer++ = fileSize & 0xFF;
                                 fileSize >>= 8;
                                 *buffer++ = fileSize & 0xFF;
-                                
+
                                 (*numEntries)++;
                             }
                             else {
@@ -420,6 +433,7 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
     uint8_t c;
 
     uint8_t parseState;
+    bool beganWithSpaces;
     bool parsingFileSize;
     uint32_t fileSizeTemp;
 
@@ -443,6 +457,7 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
     }
 
     // Start data connection
+    EspDrv_stopClient( FTP_dataSocket );
     if ( EspDrv_startClient( FTP_host, dataServerPort, FTP_dataSocket, TCP_MODE ) == true ) {
 
         DEBUGFTP_println("Connected to server data socket.");
@@ -483,6 +498,7 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
     connClosedData = false;
     bytesRead = 0;
     parseState = entry == 0 ? 0 : 11;
+    beganWithSpaces = true;
     parsingFileSize = false;
     fileSizeTemp = 0;
     t0 = millis();
@@ -523,6 +539,7 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
                     case 0:
                         *fileOrDirectory = c == 'd' ? '>' : ' ';
                         parseState = 1;
+                        beganWithSpaces = true;
                         break;
 
                     case 1:
@@ -532,9 +549,17 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
                     case 6:
                     case 7:
                     case 8:
-                        // Skip non space characters, and the following space separator
-                        if ( c == ' ' ) {
-                            parseState++;
+                        // Skip begginin spaces, following non space characters, and one space separator
+                        if ( beganWithSpaces == true ) {
+                            if ( c != ' ' ) {
+                                beganWithSpaces = false;
+                            }
+                        }
+                        else {
+                            if ( c == ' ' ) {
+                                parseState++;
+                                beganWithSpaces = true;
+                            }
                         }
                         break;
 
@@ -552,6 +577,7 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
                             if ( c == ' ' ) {
 
                                 *fileSize = fileSizeTemp;
+                                beganWithSpaces = true;
                                 parseState = 6;
                             }
                             else {
@@ -709,12 +735,11 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
     int32_t totalBytesRead;
 
     bool connClosed;
-    bool connClosedData;
 
     uint8_t drive;
     uint8_t fileHandle;
 
-    uint16_t bytesRead;
+    int16_t bytesRead;
     uint16_t numBytesReadInBuffer;
     uint16_t bytesAvailableBuffer;
     uint8_t *bufPointer;
@@ -757,6 +782,7 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
     }
 
     // Start data connection
+    EspDrv_stopClient( FTP_dataSocket );
     if ( EspDrv_startClient( FTP_host, dataServerPort, FTP_dataSocket, TCP_MODE ) == true ) {
 
         DEBUGFTP_println("Connected to server data socket.");
@@ -779,7 +805,6 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
     }
 
     connClosed = false;
-    connClosedData = false;
 
     DEBUGFTP_print( "Opening file: " );
     DEBUGFTP_println( sdPath );
@@ -804,12 +829,12 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
         bytesAvailableBuffer = bufferSize;
         bufPointer = buffer;
         t0 = millis();
-        while ( connClosedData == false && ( millis() - t0 < FTP_WAIT ) ) {
+        while ( ( millis() - t0 < FTP_WAIT ) ) {
 
             bytesAvailable = EspDrv_availData( FTP_dataSocket );
             if ( bytesAvailable > 0 ) {
 
-                bytesRead = EspDrv_getDataBuf( FTP_dataSocket, bufPointer, bytesAvailableBuffer, &connClosedData );
+                bytesRead = EspDrv_getDataBuf( FTP_dataSocket, bufPointer, bytesAvailableBuffer );
                 if ( bytesRead == -1 ) {
                     DEBUGFTP_println("ERROR***Reading data***");
                     ESXDOS_fclose( fileHandle );
@@ -881,15 +906,13 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
                     progressCallback( totalBytesRead );
 
                 }
-                
+
             }
 
         }
 
         DEBUGFTP_print( "\nFINISHED TRANSFERRING DATA: " );
-        DEBUGFTP_print_l( totalBytesRead );
-        DEBUGFTP_print( " bytes were read, connClosedData=" );
-        DEBUGFTP_println( connClosedData == true ? "true" : "false" );
+        DEBUGFTP_println_l( totalBytesRead );
 
     }
 
@@ -904,19 +927,17 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
         DEBUGFTP_println( "File closed OK" );
     }
 
-    if ( connClosedData == false ) {
+    EspDrv_stopClient( FTP_dataSocket );
 
-        EspDrv_stopClient( FTP_dataSocket );
+//    DEBUGFTP_println( "\nReading RETR end response..." );
 
-        DEBUGFTP_println( "\nReading RETR end response..." );
+    connClosed = false;
 
-        connClosed = false;
+//    if ( FTP_parseCommandResponse( &connClosed ) == false ) {
+//        DEBUGFTP_println( "\nERROR reading RETR end response" );
+//    }
 
-        if ( FTP_parseCommandResponse( &connClosed ) == false ) {
-            DEBUGFTP_println( "\nERROR reading RETR end response" );
-        }
-
-    }
+    DEBUGFTP_println( "\nSending QUIT..." );
 
     if ( FTP_sendCommand( "QUIT" ) == false ) {
         DEBUGFTP_println( "\nERROR sending QUIT" );

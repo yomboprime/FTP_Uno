@@ -269,7 +269,7 @@ extern bool EspDrv_stopClient(uint8_t sock);
 extern bool EspDrv_getServerState(uint8_t sock);
 extern bool EspDrv_getClientState(uint8_t sock);
 extern bool EspDrv_getData(uint8_t socket, uint8_t *data, bool peek, bool* connClose);
-extern int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize, bool* connClose);
+extern int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize);
 extern bool EspDrv_sendData(uint8_t socket, uint8_t *data, uint16_t len, bool appendCrLf);
 // delete: bool EspDrv_sendData(uint8_t sock, const __FlashStringHelper *data, uint16_t len, bool appendCrLf=false);
 extern bool EspDrv_sendDataUdp(uint8_t sock, char* host, uint16_t port, uint8_t *data, uint16_t len);

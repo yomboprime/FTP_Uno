@@ -871,7 +871,7 @@ bool EspDrv_getData(uint8_t socket, uint8_t *data, bool peek, bool* connClose)
  * It reads up to bufSize bytes.
  * @return received data size for success else -1.
  */
-int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize, bool* connClose)
+int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize)
 {
 
     int c;
@@ -894,30 +894,6 @@ int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize, bool* conn
         buf[i] = (char)c;
         EspDrv__bufPos--;
     }
-
-    // after the data packet a ",CLOSED" string may be received
-    // this means that the socket is now closed
-
-    delay(5);
-
-    if ( UART_available() > 0 )
-    {
-        // 48 = '0'
-        if (UART_peek()==48+socket)
-        {
-            int idx = EspDrv_readUntil(500, ",CLOSED\n\r", false);
-            if(idx!=NUMESPTAGS)
-            {
-                LOGERROR(F("Tag CLOSED not found"));
-            }
-
-            LOGDEBUG("");
-            LOGDEBUG(F("Connection closed"));
-
-            *connClose=true;
-        }
-    }
-
 
     return bufSize;
 }
@@ -1252,7 +1228,7 @@ void EspDrv_espEmptyBuf(bool warn)
 // copied from Serial::timedRead
 int EspDrv_timedRead()
 {
-  int _timeout = 1000;
+  int _timeout = 10000;
   int c;
   long _startMillis = millis();
   do

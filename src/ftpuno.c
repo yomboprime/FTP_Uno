@@ -1109,8 +1109,16 @@ void infiniteLoop() {
                             for( i = 0; i < 8 && *pbuffer3 > 0; i++ ) {
                                 if ( *pbuffer3 == '.' ) {
                                     j = 1;
+                                    *pbuffer2 = '.';
                                 }
-                                *pbuffer2++ = *pbuffer3++;
+                                else if ( *pbuffer3 == ' ' ) {
+                                    *pbuffer2 = '_';
+                                }
+                                else {
+                                    *pbuffer2 = *pbuffer3;
+                                }
+                                pbuffer2++;
+                                pbuffer3++;
                             }
                             if ( *pbuffer3 > 0 ) {
                                 i = strlen( pbuffer3 );
