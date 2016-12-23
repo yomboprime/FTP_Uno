@@ -877,8 +877,9 @@ int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize)
     int c;
     int i;
 
-    if (socket!=EspDrv__connId)
-        return false;
+    if ( socket != EspDrv__connId ) {
+        return -1;
+    }
 
     if(EspDrv__bufPos<bufSize)
         bufSize = EspDrv__bufPos;
@@ -887,11 +888,11 @@ int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize)
     {
         c = EspDrv_timedRead();
         //LOGDEBUG(c);
-        if(c==-1) {
+        if ( c == -1 ) {
             return -1;
         }
 
-        buf[i] = (char)c;
+        *buf++ = (char)c;
         EspDrv__bufPos--;
     }
 
@@ -1228,8 +1229,8 @@ void EspDrv_espEmptyBuf(bool warn)
 // copied from Serial::timedRead
 int EspDrv_timedRead()
 {
-  int _timeout = 10000;
   int c;
+  long _timeout = 10000;
   long _startMillis = millis();
   do
   {
