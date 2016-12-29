@@ -16,7 +16,7 @@
 
 
 # Configure here your path to Node js:
-node = /media/datos/soft/nodejs/node-v4.4.5-linux-x64/bin/node
+node = node
 
 # All the source files:
 srcFiles = src/EspDrv/RingBuffer.c src/EspDrv/IPAddress.c src/EspDrv/EspDrv.c src/textUtils.c src/zxuno/zxuno.c src/zxuno/uart.c src/esxdos.c src/zxuno/ftp.c src/ftpuno.c
