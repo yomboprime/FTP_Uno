@@ -718,7 +718,7 @@ bool EspDrv_stopClient(uint8_t socket)
     ret = EspDrv_sendCmdBuffer( 4000 );
 
     return ret == TAG_OK;
-
+    
 }
 
 
@@ -878,7 +878,7 @@ int EspDrv_getDataBuf(uint8_t socket, uint8_t *buf, uint16_t bufSize)
     int i;
 
     if ( socket != EspDrv__connId ) {
-        return -1;
+        return 0;
     }
 
     if(EspDrv__bufPos<bufSize)

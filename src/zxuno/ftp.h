@@ -49,6 +49,7 @@ extern bool FTP_getCWD( uint8_t *path, uint8_t *buffer, uint16_t bufferSize );
 
 // Low level functions
 extern uint8_t FTP_startControlConnection( bool *connClosed );
+extern uint8_t controlConnection3Attempts( bool *connClosed, uint16_t *dataServerPort );
 extern bool FTP_sendCommand( uint8_t *cmd );
 extern bool FTP_parseCommandResponse( bool *connClosed );
 extern bool FTP_parseCommandResponseBuffer( uint8_t *buffer, uint16_t bufferSize, int *bytesWritten, bool *connClosed );

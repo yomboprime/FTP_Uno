@@ -126,20 +126,9 @@ uint8_t FTP_listFiles( uint8_t *ftpPath, uint8_t *buffer, uint16_t firstEntry, u
     long t0;
 
     // Start control connection
-    connClosed = false;
-    returnCode = FTP_startControlConnection( &connClosed );
+    returnCode = controlConnection3Attempts( &connClosed, &dataServerPort );
     if ( returnCode != FTP_NO_ERROR ) {
-
-        DEBUGFTP_println("Could not connect to FTP server.");
-
         return returnCode;
-
-    }
-
-    // PASV command to get data server port
-    if ( FTP_PASVCommand( &dataServerPort, &connClosed ) == false ) {
-        DEBUGFTP_println( "\nERROR executing PASV command" );
-        return FTP_ERROR_SENDING_COMMAND;
     }
 
     // Start data connection
@@ -436,24 +425,13 @@ uint8_t FTP_getFileNameAndSize( uint8_t *ftpPath, uint16_t entry, uint8_t *buffe
     bool beganWithSpaces;
     bool parsingFileSize;
     uint32_t fileSizeTemp;
-
+    
     long t0;
 
     // Start control connection
-    connClosed = false;
-    returnCode = FTP_startControlConnection( &connClosed );
+    returnCode = controlConnection3Attempts( &connClosed, &dataServerPort );
     if ( returnCode != FTP_NO_ERROR ) {
-
-        DEBUGFTP_println("Could not connect to FTP server.");
-
         return returnCode;
-
-    }
-
-    // PASV command to get data server port
-    if ( FTP_PASVCommand( &dataServerPort, &connClosed ) == false ) {
-        DEBUGFTP_println( "\nERROR executing PASV command" );
-        return FTP_ERROR_SENDING_COMMAND;
     }
 
     // Start data connection
@@ -765,20 +743,9 @@ uint8_t FTP_downloadFile( uint8_t *ftpPath, uint8_t *sdPath, uint8_t *buffer, ui
     DEBUGFTP_println_l( drive );
 
     // Start control connection
-    connClosed = false;
-    returnCode = FTP_startControlConnection( &connClosed );
+    returnCode = controlConnection3Attempts( &connClosed, &dataServerPort );
     if ( returnCode != FTP_NO_ERROR ) {
-
-        DEBUGFTP_println("Could not connect to FTP server.");
-
         return returnCode;
-
-    }
-
-    // PASV command to get data server port
-    if ( FTP_PASVCommand( &dataServerPort, &connClosed ) == false ) {
-        DEBUGFTP_println( "\nERROR executing PASV command" );
-        return FTP_ERROR_SENDING_COMMAND;
     }
 
     // Start data connection
@@ -1197,4 +1164,30 @@ bool FTP_PASVCommand( uint16_t *dataServerPort, bool *connClosed ) {
     *dataServerPort = ( hiServerPort << 8 ) | loServerPort;
 
     return true;
+}
+
+uint8_t controlConnection3Attempts( bool *connClosed, uint16_t *dataServerPort ) {
+ 
+    uint8_t returnCode;
+    uint8_t attempts = 0;
+
+    *connClosed = false;
+    returnCode = -1;
+    while ( returnCode != FTP_NO_ERROR && attempts < 3 ) {
+        
+        returnCode = FTP_startControlConnection( connClosed );
+        
+        if ( returnCode != FTP_NO_ERROR ) {
+            DEBUGFTP_println("Could not connect to FTP server.");
+            attempts++;
+        }
+        // PASV command to get data server port
+        else if ( FTP_PASVCommand( dataServerPort, connClosed ) == false ) {
+            DEBUGFTP_println( "\nERROR executing PASV command" );
+            attempts++;
+            returnCode = FTP_ERROR_SENDING_COMMAND;
+        }
+    }
+    
+    return returnCode;
 }
