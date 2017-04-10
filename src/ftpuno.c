@@ -24,6 +24,7 @@
 #include <spectrum.h>
 #include <math.h>
 
+#include "config.h"
 #include "textUtils.h"
 #include "zxuno/ftp.h"
 
@@ -35,6 +36,9 @@
  */
 #define getKey() in_Inkey()
 uint16_t waitKey();
+
+void loadConfig();
+void configCallback( uint8_t *param, uint8_t *value );
 
 void defineGraphics();
 void brightSelection( bool bright );
@@ -160,7 +164,7 @@ uint8_t *pbuffer3;
 
 #define FTP_FILE_ENTRY_SIZE ( MAX_BYTES_FTP_FILENAME + FTP_DIR_ENTRY_SIZE )
 
-// Disk buffer // 4096
+// Disk buffer // TODO 4096
 #define BUFFER_SIZE ( 1024 )
 uint8_t *ftpunoBuffer = (uint8_t *)0x6000;
 
@@ -234,6 +238,8 @@ void main(void) {
     defineGraphics();
 
     zx_border( INK_BLUE );
+    
+    loadConfig();
 
     textUtils_paintRectangleWithAttributes( X_COORD_TITLE_BOX, X_SIZE_TITLE_BOX - 1, Y_COORD_TITLE_BOX, Y_SIZE_TITLE_BOX - 1, ATTRIBUTES_TITLE_BOX );
 
@@ -263,16 +269,6 @@ void main(void) {
 
     updateVerticalBar( X_COORD_FTP_VERT_BAR, 0, 20 );
     updateVerticalBar( X_COORD_SD_VERT_BAR, 0, 20 );
-
-    strcpy( currentWiFiSSID, "apoint" );
-    strcpy( currentWiFiPassword, "apoint123" );
-    strcpy( currentHost, "10.42.0.1" );
-    currentPort = 21;
-    strcpy( currentFTPUser, "anonymous" );
-    strcpy( currentFTPPassword, "test" );
-    sprintf( ftpunoFTPPath, "/" );
-    sprintf( ftpunoSDPath, "/" );
-
 
     initDrive();
 
@@ -312,6 +308,90 @@ void main(void) {
 //*****************************************
 //*****************************************
 //*****************************************
+
+void loadConfig() {
+    
+    int error;
+    uint8_t *errorTxt;
+
+    *currentWiFiSSID = 0;
+    *currentWiFiPassword = 0;
+    *currentHost = 0;
+    currentPort = 21;
+    *currentFTPUser = 0;
+    *currentFTPPassword = 0;
+    sprintf( ftpunoFTPPath, "/" );
+    sprintf( ftpunoSDPath, "/" );
+
+    error = loadConfigFile( "/SYS/CONFIG/FTP.CFG", configCallback, ftpunoBuffer, BUFFER_SIZE );
+    
+    if ( error == CONFIG_OK ) {
+
+        if ( *currentWiFiSSID == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "SSID not set.";
+        }
+        else if ( *currentWiFiPassword == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "WiFi password not set.";
+        }
+        else if ( *currentHost == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "Server not set.";
+        }
+        else if ( *currentHost == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "Server not set.";
+        }
+        else if ( *currentFTPUser == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "FTP user not set.";
+        }
+        else if ( *currentFTPPassword == 0 ) {
+            error = CONFIG_ERROR_VALIDATION;
+            errorTxt = "FTP password not set.";
+        }
+    }
+
+    if ( error != CONFIG_OK ) {
+        
+        textUtils_println( "Error loading config file: " );
+        textUtils_println( configError( error ) );
+
+        while (1);
+        
+    }
+
+}
+
+void configCallback( uint8_t *param, uint8_t *value ) {
+
+    if ( strcmp( "ssid", param ) == 0 ) {
+        strcpy( currentWiFiSSID, value );
+    }
+    else if ( strcmp( "wifi_password", param ) == 0 ) {
+        strcpy( currentWiFiPassword, value );
+    }
+    else if ( strcmp( "server", param ) == 0 ) {
+        strcpy( currentHost, value );
+    }
+    else if ( strcmp( "port", param ) == 0 ) {
+        currentPort = atoi( value );
+    }
+    else if ( strcmp( "user", param ) == 0 ) {
+        strcpy( currentFTPUser, value );
+    }
+    else if ( strcmp( "ftp_password", param ) == 0 ) {
+        strcpy( currentFTPPassword, value );
+    }
+    else if ( strcmp( "ftp_initial_dir", param ) == 0 ) {
+        strcpy( ftpunoFTPPath, value );
+    }
+    else if ( strcmp( "sd_initial_dir", param ) == 0 ) {
+        strcpy( ftpunoSDPath, value );
+    }
+
+}
 
 uint16_t waitKey() {
 
@@ -1145,6 +1225,8 @@ void infiniteLoop() {
                             key2 = waitKey();
 
                             if ( key2 == 'y' || key2 == 'Y' ) {
+                                
+                                printToStatusBox( "Downloading...", NULL );
 
                                 diff = FTP_downloadFile( ftpunoFilePath, pbuffer, ftpunoBuffer, BUFFER_SIZE, downloadProgressCallback );
                                 if ( diff == FTP_NO_ERROR ) {

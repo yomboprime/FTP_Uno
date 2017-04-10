@@ -19,7 +19,7 @@
 node = node
 
 # All the source files:
-srcFiles = src/EspDrv/RingBuffer.c src/EspDrv/IPAddress.c src/EspDrv/EspDrv.c src/textUtils.c src/zxuno/zxuno.c src/zxuno/uart.c src/esxdos.c src/zxuno/ftp.c src/ftpuno.c
+srcFiles = src/EspDrv/RingBuffer.c src/EspDrv/IPAddress.c src/EspDrv/EspDrv.c src/textUtils.c src/zxuno/zxuno.c src/zxuno/uart.c src/esxdos.c src/config.c src/zxuno/ftp.c src/ftpuno.c
 #srcFiles = src/textUtils.c src/zxuno/zxuno.c src/zxuno/esxdos.c src/ftpuno.c
 
 # All the targets:
