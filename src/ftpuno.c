@@ -1230,7 +1230,7 @@ void infiniteLoop() {
                                 diff = FTP_downloadFile( ftpunoFilePath, pbuffer, ftpunoBuffer, BUFFER_SIZE, downloadProgressCallback );
                                 if ( diff == FTP_NO_ERROR ) {
 
-                                    printToStatusBox( "File downloaded succesfully:", shortString( pbuffer, 24 ) );
+                                    printToStatusBox( "File downloaded succesfully:", shortString( pbuffer, X_SIZE_STATUS_BOX ) );
 
                                     refreshSDListing();
                                     showFileInfo = false;
@@ -1279,7 +1279,68 @@ void infiniteLoop() {
                             }
                         }
                         else {
-                            // Delete the file
+                            // Delete the file with confirmation
+                            sprintf( ftpunoBuffer, "Confirm DELETE %ld bytes?", fileSize1 );
+                            printToStatusBox( ftpunoBuffer, shortString( ftpunoFilePath, 24 ) );
+                            textUtils_printAt32( 27, 23 );
+                            textUtils_print( "(Y/N)" );
+                            
+                            key2 = waitKey();
+
+                            if ( key2 == 'y' || key2 == 'Y' ) {
+                                
+                                printToStatusBox( "Deleting file...", NULL );
+
+                                ESXDOS_delete( ftpunoFilePath, SD_drive );
+                                iferror {
+
+                                    sprintf( ftpunoBuffer, "Err code: %d", diff );
+                                    printToStatusBox( "Error while deleting file:", shortString( ftpunoFilePath, X_SIZE_STATUS_BOX ) );
+
+                                }
+                                else {
+
+                                    printToStatusBox( "File deleted succesfully:", shortString( ftpunoFilePath, X_SIZE_STATUS_BOX ) );
+
+                                    if ( selectedDisplayedEntry == 0 ) {
+                                        if ( firstDisplayedSDEntry > 0 && ( firstDisplayedSDEntry + 1 == numTotalSDEntries ) ) {
+                                            
+                                            // User has deleted the only one file in the page. Go to previous page.
+
+                                            diff = MAX_DISPLAY_DIR_ENTRIES;
+                                            if ( diff > firstDisplayedSDEntry ) {
+                                                diff = firstDisplayedSDEntry;
+                                            }
+                                            firstDisplayedSDEntry -= diff;
+
+                                            brightSelection( false );
+
+                                            refreshSDListing();
+
+                                            selectedDisplayedEntry = numDisplayedSDEntries - 1;
+
+                                            brightSelection( true );
+                                        }
+                                    }
+                                    else {
+                                        if ( selectedDisplayedEntry + 1 >= numDisplayedSDEntries ) {
+                                            brightSelection( false );
+                                            selectedDisplayedEntry--;
+                                            refreshSDListing();
+                                            brightSelection( true );
+                                        }
+                                        else {
+                                            refreshSDListing();
+                                            brightSelection( true );
+                                        }
+                                    }
+                                }
+                                
+                                showFileInfo = false;
+                            }
+                            else {
+                                printToStatusBox( "Aborted by user.", NULL );
+                            }
                         }
                     }
                     else {

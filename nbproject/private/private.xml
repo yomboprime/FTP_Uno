@@ -11,12 +11,8 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/ftpuno.c</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/zxuno/ftp.c</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/EspDrv/EspDrv.h</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/EspDrv/debugEsp.h</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/EspDrv/EspDrv.c</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/zxuno/ftp.h</file>
-            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/textUtils.h</file>
+            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/esxdos.h</file>
+            <file>file:/media/datos/Devel/spectrum/FTP_Uno/src/esxdos.c</file>
         </group>
     </open-files>
 </project-private>
