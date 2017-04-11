@@ -278,7 +278,6 @@ void main(void) {
 
     }
 
-    
     connectToWiFi();
 
     if ( connectedToWiFi ) {
