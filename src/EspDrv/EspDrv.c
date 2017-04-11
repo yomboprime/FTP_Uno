@@ -536,7 +536,7 @@ uint8_t EspDrv_getScanNetworks()
 
     while (idx == NUMESPTAGS)
     {
-        EspDrv__networkEncr[ssidListNum] = UART_parseInt();
+        EspDrv__networkEncr[ssidListNum] = UART_parseInt(1000);
 
         // discard , and " characters
         EspDrv_readUntil(1000, "\"", true);
@@ -552,7 +552,7 @@ uint8_t EspDrv_getScanNetworks()
         // discard , character
         EspDrv_readUntil(1000, ",", true);
 
-        EspDrv__networkRssi[ssidListNum] = UART_parseInt();
+        EspDrv__networkRssi[ssidListNum] = UART_parseInt(1000);
 
         idx = EspDrv_readUntil(1000, "+CWLAP:(", true);
 
@@ -755,25 +755,25 @@ uint16_t EspDrv_availData(uint8_t socket)
     if ( bytes > 0 )
     {
         //LOGDEBUG1(F("Bytes in the serial buffer: "), bytes);
-        if ( UART_find((char *)"+IPD,") == true )
+        if ( UART_find((char *)"+IPD,", 1000) == true )
         {
             // format is : +IPD,<id>,<len>:<data>
             // format is : +IPD,<ID>,<len>[,<remote IP>,<remote port>]:<data>
 
-            EspDrv__connId = UART_parseInt();    // <ID>
+            EspDrv__connId = UART_parseInt(1000);    // <ID>
             UART_read();                         // ,
-            EspDrv__bufPos = UART_parseInt();    // <len>
+            EspDrv__bufPos = UART_parseInt(1000);    // <len>
             UART_read();                         // "
-            EspDrv__remoteIp[0] = UART_parseInt();    // <remote IP>
+            EspDrv__remoteIp[0] = UART_parseInt(1000);    // <remote IP>
             UART_read();                         // .
-            EspDrv__remoteIp[1] = UART_parseInt();
+            EspDrv__remoteIp[1] = UART_parseInt(1000);
             UART_read();                         // .
-            EspDrv__remoteIp[2] = UART_parseInt();
+            EspDrv__remoteIp[2] = UART_parseInt(1000);
             UART_read();                         // .
-            EspDrv__remoteIp[3] = UART_parseInt();
+            EspDrv__remoteIp[3] = UART_parseInt(1000);
             UART_read();                         // "
             UART_readBlocking();                 // ,
-            EspDrv__remotePort = UART_parseInt();// <remote port>
+            EspDrv__remotePort = UART_parseInt(1000);// <remote port>
 
             UART_read();                         // :
 
