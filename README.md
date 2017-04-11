@@ -18,7 +18,7 @@ The screen is divided into left view (the FTP file list view), right view (the S
 
 Each view has a scrolling bar to its right that shows what portion of the file list is visible right now.
 
-TODO Insert screenshot
+![Screenshot](https://github.com/yomboprime/FTP_Uno/raw/master/screenshots/FTPscreenshot.jpg)
 
 ## Input
 
