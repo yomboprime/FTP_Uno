@@ -7,7 +7,7 @@ FTP Client for ZX-Uno using the WiFi ESP-12E addon.
 - Plug your WiFi addon to your ZX-Uno. Each time you are going to use it, remember to select the correct core in the Core Selection Menu of your ZX-Uno (it shows up at boot pressing Caps Lock key)
 - If you have not done so yet, run the [WiFi addon configuration utility](https://github.com/yomboprime/ZXYLib/blob/master/WIFICONF.tap?raw=true) to enable your ESP-12E WiFi module for the ZX-Uno.
 - Edit the text file `FTP.CFG` to suit your configuration. It has self-explanatory instructions (for more info read the last section)
-- Copy the edited file `FTP.CFG` into the directory `/SYS/CONFIG/ of your SD card.
+- Copy the edited file `FTP.CFG` into the directory `/SYS/CONFIG/` of your SD card.
 - Copy the file `ftpUno.tap` wherever you want into the SD card.
 - Start your ZX-Uno and run the `ftpUno.tap` program file by NMI event or other method.
 - The program will start to connect to the WiFi and then to the FTP server. The status message will show connection information.
