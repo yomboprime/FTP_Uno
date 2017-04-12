@@ -59,7 +59,7 @@ void printToTitleBox( bool secondColumn, uint8_t *line1, uint8_t *line2 );
 void printToBox( uint8_t attributes, uint16_t x, uint16_t y, uint16_t length, uint8_t *line1, uint8_t *line2 );
 
 uint8_t *shortString( uint8_t *string, int maxSize );
-bool concatPath( uint8_t *string1, uint8_t *string2, uint16_t maxSize );
+bool concatPath( uint8_t *string1, uint8_t *string2, uint16_t maxSize, bool appendSlash );
 
 void infiniteLoop();
 /*
@@ -149,6 +149,7 @@ uint32_t longTemp1;
 uint16_t diff;
 uint32_t fileSize1;
 uint8_t fileOrDirectory1;
+uint16_t pathLength1;
 
 uint8_t *pbuffer;
 uint8_t *pbuffer2;
@@ -631,7 +632,7 @@ void connectToWiFi() {
     uint8_t flag = 0;
     connectedToWiFi = false;
 
-    printToStatusBox( "Initiating WiFi chip...", NULL );
+    printToStatusBox( "Initializing WiFi chip...", NULL );
 
     if ( EspDrv_wifiDriverInit() != true ) {
 
@@ -917,21 +918,21 @@ bool getSDFileNameAndSize( uint8_t *path, uint32_t *fileSize, uint8_t *fileOrDir
 
     if ( *fileOrDirectory != ESXDOS_FILE_ATTRIBUTE_DIR_BIT ) {
         // Store file size
-        longTemp1 = *pbuffer++;
-        longTemp1 += ( (uint32_t)( *pbuffer++ ) ) << 8;
-        longTemp1 += ( (uint32_t)( *pbuffer++ ) ) << 16;
-        longTemp1 += ( (uint32_t)( *pbuffer++ ) ) << 24;
+        *fileSize = *pbuffer++;
+        *fileSize += ( (uint32_t)( *pbuffer++ ) ) << 8;
+        *fileSize += ( (uint32_t)( *pbuffer++ ) ) << 16;
+        *fileSize += ( (uint32_t)( *pbuffer++ ) ) << 24;
     }
 
     return true;
 }
 
-bool concatPath( uint8_t *string1, uint8_t *string2, uint16_t maxSize ) {
+bool concatPath( uint8_t *string1, uint8_t *string2, uint16_t maxSize, bool appendSlash ) {
 
     uint16_t l1 = strlen( string1 );
     uint16_t l2 = strlen( string2 );
 
-    if ( l1 + l2 + 1 > maxSize ) {
+    if ( l1 + l2 + ( appendSlash ? 1 : 0 ) > maxSize ) {
         return false;
     }
 
@@ -941,7 +942,9 @@ bool concatPath( uint8_t *string1, uint8_t *string2, uint16_t maxSize ) {
         *string1++ = *string2++;
         l2--;
     }
-    *string1++='/';
+    if ( appendSlash ) {
+        *string1++='/';
+    }
     *string1 = 0;
 
     return true;
@@ -1147,7 +1150,7 @@ void infiniteLoop() {
                             }
                             else {
                                 // Regular directory
-                                diff = concatPath( ftpunoFTPPath, ftpunoBuffer, FTP_PATH_SIZE );
+                                diff = concatPath( ftpunoFTPPath, ftpunoBuffer, FTP_PATH_SIZE, true );
                                 if ( diff == false ) {
                                     printToStatusBox( "File path too long.", NULL );
                                 }
@@ -1217,7 +1220,7 @@ void infiniteLoop() {
                             *pbuffer2 = 0;
 
                             sprintf( ftpunoBuffer, "Confirm DOWNLOAD %ld bytes?", fileSize1 );
-                            printToStatusBox( ftpunoBuffer, shortString( pbuffer, 24 ) );
+                            printToStatusBox( ftpunoBuffer, shortString( pbuffer, 27 ) );
                             textUtils_printAt32( 27, 23 );
                             textUtils_print( "(Y/N)" );
 
@@ -1264,7 +1267,7 @@ void infiniteLoop() {
                             }
                             else {
                                 // Regular directory
-                                diff = concatPath( ftpunoSDPath, ftpunoFilePath, FTP_PATH_SIZE );
+                                diff = concatPath( ftpunoSDPath, ftpunoFilePath, SD_PATH_SIZE, true );
                                 if ( diff == false ) {
                                     printToStatusBox( "File path too long.", NULL );
                                 }
@@ -1279,67 +1282,81 @@ void infiniteLoop() {
                             }
                         }
                         else {
-                            // Delete the file with confirmation
-                            sprintf( ftpunoBuffer, "Confirm DELETE %ld bytes?", fileSize1 );
-                            printToStatusBox( ftpunoBuffer, shortString( ftpunoFilePath, 24 ) );
-                            textUtils_printAt32( 27, 23 );
-                            textUtils_print( "(Y/N)" );
-                            
-                            key2 = waitKey();
 
-                            if ( key2 == 'y' || key2 == 'Y' ) {
-                                
-                                printToStatusBox( "Deleting file...", NULL );
+                            pathLength1 = strlen( ftpunoSDPath );
 
-                                ESXDOS_delete( ftpunoFilePath, SD_drive );
-                                iferror {
-
-                                    sprintf( ftpunoBuffer, "Err code: %d", diff );
-                                    printToStatusBox( "Error while deleting file:", shortString( ftpunoFilePath, X_SIZE_STATUS_BOX ) );
-
-                                }
-                                else {
-
-                                    printToStatusBox( "File deleted succesfully:", shortString( ftpunoFilePath, X_SIZE_STATUS_BOX ) );
-
-                                    if ( selectedDisplayedEntry == 0 ) {
-                                        if ( firstDisplayedSDEntry > 0 && ( firstDisplayedSDEntry + 1 == numTotalSDEntries ) ) {
-                                            
-                                            // User has deleted the only one file in the page. Go to previous page.
-
-                                            diff = MAX_DISPLAY_DIR_ENTRIES;
-                                            if ( diff > firstDisplayedSDEntry ) {
-                                                diff = firstDisplayedSDEntry;
-                                            }
-                                            firstDisplayedSDEntry -= diff;
-
-                                            brightSelection( false );
-
-                                            refreshSDListing();
-
-                                            selectedDisplayedEntry = numDisplayedSDEntries - 1;
-
-                                            brightSelection( true );
-                                        }
-                                    }
-                                    else {
-                                        if ( selectedDisplayedEntry + 1 >= numDisplayedSDEntries ) {
-                                            brightSelection( false );
-                                            selectedDisplayedEntry--;
-                                            refreshSDListing();
-                                            brightSelection( true );
-                                        }
-                                        else {
-                                            refreshSDListing();
-                                            brightSelection( true );
-                                        }
-                                    }
-                                }
-                                
-                                showFileInfo = false;
+                            if ( concatPath( ftpunoSDPath, ftpunoFilePath, SD_PATH_SIZE, false ) == false ) {
+                                printToStatusBox( "File path too long.", NULL );
+                                ftpunoSDPath[ pathLength1 ] = 0;
                             }
                             else {
-                                printToStatusBox( "Aborted by user.", NULL );
+                            
+                                // Delete the file with confirmation
+                                sprintf( ftpunoBuffer, "Confirm DELETE %ld bytes?", fileSize1 );
+                                printToStatusBox( ftpunoBuffer, shortString( ftpunoSDPath, 27 ) );
+                                textUtils_printAt32( 27, 23 );
+                                textUtils_print( "(Y/N)" );
+
+                                key2 = waitKey();
+
+                                if ( key2 == 'y' || key2 == 'Y' ) {
+
+                                    printToStatusBox( "Deleting file...", NULL );
+
+                                    ESXDOS_delete( ftpunoSDPath, SD_drive );
+                                    iferror {
+
+                                        sprintf( ftpunoBuffer, "Err code: %d", diff );
+                                        printToStatusBox( "Error while deleting file:", shortString( ftpunoSDPath, X_SIZE_STATUS_BOX ) );
+                                        ftpunoSDPath[ pathLength1 ] = 0;
+
+                                    }
+                                    else {
+                                        
+                                        printToStatusBox( "File deleted succesfully:", shortString( ftpunoSDPath, X_SIZE_STATUS_BOX ) );
+                                        
+                                        ftpunoSDPath[ pathLength1 ] = 0;
+
+                                        if ( selectedDisplayedEntry == 0 ) {
+                                            if ( firstDisplayedSDEntry > 0 && ( firstDisplayedSDEntry + 1 == numTotalSDEntries ) ) {
+
+                                                // User has deleted the only one file in the page. Go to previous page.
+
+                                                diff = MAX_DISPLAY_DIR_ENTRIES;
+                                                if ( diff > firstDisplayedSDEntry ) {
+                                                    diff = firstDisplayedSDEntry;
+                                                }
+                                                firstDisplayedSDEntry -= diff;
+
+                                                brightSelection( false );
+
+                                                refreshSDListing();
+
+                                                selectedDisplayedEntry = numDisplayedSDEntries - 1;
+
+                                                brightSelection( true );
+                                            }
+                                        }
+                                        else {
+                                            if ( selectedDisplayedEntry + 1 >= numDisplayedSDEntries ) {
+                                                brightSelection( false );
+                                                selectedDisplayedEntry--;
+                                                refreshSDListing();
+                                                brightSelection( true );
+                                            }
+                                            else {
+                                                refreshSDListing();
+                                                brightSelection( true );
+                                            }
+                                        }
+                                    }
+
+                                    showFileInfo = false;
+                                }
+                                else {
+                                    printToStatusBox( "Aborted by user.", NULL );
+                                    ftpunoSDPath[ pathLength1 ] = 0;
+                                }
                             }
                         }
                     }
@@ -1375,11 +1392,5 @@ void infiniteLoop() {
             }
         }
 
-    }
-
-    i = waitKey();
-    while ( i != 32 ) {
-        i = waitKey();
-        textUtils_println_l( i );
     }
 }
