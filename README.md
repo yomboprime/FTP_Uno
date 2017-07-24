@@ -3,7 +3,7 @@ FTP Client for ZX-Uno using the WiFi ESP-12E addon.
 
 ## Quick Start
 
-- Upgrade your ZX-Uno by writting in it the [ZX core with UART support](https://github.com/yomboprime/zxuno-addons/blob/master/test24_uart/v4/COREn.ZX1?raw=true)
+- Upgrade your ZX-Uno by writting in it the [ZX core with UART support](https://github.com/yomboprime/zxuno-addons/blob/master/test24_uart_dac_vga/v4/COREn.ZX1?raw=true)
 - Plug your WiFi addon to your ZX-Uno. Each time you are going to use it, remember to select the correct core in the Core Selection Menu of your ZX-Uno (it shows up at boot pressing Caps Lock key)
 - If you have not done so yet, run the [WiFi addon configuration utility](https://github.com/yomboprime/ZXYLib/blob/master/WIFICONF.tap?raw=true) to enable your ESP-12E WiFi module for the ZX-Uno.
 - Edit the text file `FTP.CFG` to suit your configuration. It has self-explanatory instructions (for more info read the last section)
